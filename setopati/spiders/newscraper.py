@@ -1,6 +1,6 @@
 import scrapy
 import re
-from config import categories
+from config import categories, convert_to_english
 import json
 
 
@@ -17,9 +17,7 @@ class NewscraperSpider(scrapy.Spider):
 
     # start request for each category
     def start_requests(self):
-        # yield scrapy.Request("https://www.setopati.com/politics?page=1577", meta={'news_cat': "Politics"})
         for indv_category in categories:
-            # yield scrapy.Request(f"https://setopati.com/{indv_category}", callback=self.parse, meta={'news_cat': indv_category})
             yield scrapy.Request(f"https://setopati.com/{indv_category}", callback=self.parse, meta={'news_cat': indv_category})
 
     # helper function: extracts date using regex
@@ -94,7 +92,9 @@ class NewscraperSpider(scrapy.Spider):
                     if not found:
                         yield response.follow(href, callback=self.parse_old_news, meta={'href': href, 'news_cat': news_cat})
         else:
+
             scraped_data = {
+                "news_date": convert_to_english(published_date),
                 "link": response.meta['href'],
                 'news_cat': news_cat.capitalize(),
                 "title": title,
@@ -138,6 +138,7 @@ class NewscraperSpider(scrapy.Spider):
                 images.append(img.css('::attr(src)').get())
 
         scraped_data = {
+            "news_date": convert_to_english(published_date),
             "link": response.meta['href'],
             "news_cat": news_cat.capitalize(),
             "title": title,
